@@ -1,13 +1,32 @@
-from domain.inventory_domain import ItemRegistry
+from logic.item_registry import ItemRegistry
 from domain.inventory_domain import InventoryItem
 from logic.validation import validate_item_fields_values
 
 
 class CrudProxy:
+    '''
+    A proxy for basic crud operations with IventoryItems against an IventoryRegistry.
+    '''
     def __init__(self):
         self.__registry = ItemRegistry()
 
     def create_item(self, item_id, name, description, acq_price, location):
+        '''Creates an InventoryItem from given params and persists it.
+
+                Args:
+                    item_id (string): item id
+                    name (string): item name
+                    description (string)
+                    acq_price (float): The acquisition price for item.
+
+                Raises: ValueError: item_id, name, description are nullable, location is not 4 letters string or
+                acq_price is not a float.
+
+                Returns:
+                    created: A copy for the item that was created.
+
+
+        '''
         errors = validate_item_fields_values(item_id, name, description, acq_price, location)
         created = None
         if not errors:
@@ -21,6 +40,18 @@ class CrudProxy:
             raise ValueError(errors)
 
     def read_item(self, item_id):
+        ''' Reads an item from the registry using the given id.
+
+                        Args:
+                            item_id (string): Id, name, description and location for the given item.
+                            acq_price (float): The acquisition price for item.
+
+                        Raises: ValueError: item_id, name, description are nullable, location is not 4 letters string or
+                        acq_price is not a float.
+
+                        Returns:
+                            created: A copy for the item that was created.
+        '''
         errors = []
         found = None
         if not item_id:

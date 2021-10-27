@@ -1,4 +1,6 @@
 from logic.crud_proxy import CrudProxy
+from tests.test_domain import test_all_domain
+from tests.test_logic import test_all_logic
 
 
 def show_crud_options():
@@ -85,5 +87,8 @@ def crud_menu():
             delete_status = delete_item_option(crud_proxy)
             print(delete_status)
 
+
+test_all_domain()
+test_all_logic()
 
 crud_menu()
