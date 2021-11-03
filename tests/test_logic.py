@@ -1,5 +1,9 @@
+import unittest
+
 from domain.inventory_domain import InventoryItem
 from logic.item_registry import ItemRegistry
+from logic.validation import validate_item_fields_values
+from logic.validation import validate_price_is_float
 import copy
 
 
@@ -88,8 +92,51 @@ def test_item_registry_delete():
     assert subject.read(first_item.item_id) is None
 
 
+def test_validate_price_is_float():
+    assert validate_price_is_float('12') is True
+    assert validate_price_is_float('12.067') is True
+    assert validate_price_is_float('12b') is False
+    assert validate_price_is_float('') is False
+    assert validate_price_is_float('argz') is False
+    assert validate_price_is_float('12.06t') is False
+
+
+def test_validate_item_fields_values_for_wrong_input():
+    # given wrong input
+    item_id = ''
+    name = ''
+    description = ''
+    acq_price = '1234.6tdf'
+    location = '7letter'
+
+    # should identify all possible errors
+    errors = validate_item_fields_values(item_id, name, description, acq_price, location)
+    assert len(errors) == 5
+    assert "Item id should not be empty." in errors
+    assert "Item name should not be empty." in errors
+    assert "Item description should not be empty." in errors
+    assert "Location should be a 4 letter string." in errors
+    assert "Acquisition price should be a string convertible to float."
+
+
+def test_validate_item_fields_values_for_correct_input():
+    # given correct input
+    item_id = 'id'
+    name = 'name'
+    description = 'description'
+    acq_price = '1234.6'
+    location = 'ABCD'
+
+    # should identify no errrors
+    errors = validate_item_fields_values(item_id, name, description, acq_price, location)
+    assert len(errors) == 0
+
+
 def test_all_logic():
     test_item_registry_constructor_and_getters_setters()
     test_item_registry_create()
     test_item_registry_read_and_read_all()
     test_item_registry_update()
+    test_validate_price_is_float()
+    test_validate_item_fields_values_for_wrong_input()
+    test_validate_item_fields_values_for_correct_input()

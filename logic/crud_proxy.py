@@ -90,3 +90,6 @@ class CrudProxy:
             return found
         else:
             raise ValueError(errors)
+
+    def override_registry(self, items):
+        self.__registry.override_state(items)

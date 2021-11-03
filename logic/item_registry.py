@@ -51,3 +51,7 @@ class ItemRegistry:
             old = copy.deepcopy(self.item_registry[item_id])
             del self.item_registry[item_id]
         return old
+
+    def override_state(self, items):
+        # override the registry state with given items, old items are lost
+        self.item_registry = dict({item.item_id: item for item in items})
