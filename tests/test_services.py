@@ -122,7 +122,6 @@ class ServicesTestCase(unittest.TestCase):
         subject.undo()
         self.assertTrue(subject.read_all() == [item1, item4])
 
-
     def test_switch_location(self):
         # given registry with 3 items
         subject = InventoryManagementServices()
