@@ -81,6 +81,7 @@ class CrudProxy:
         found = None
         if not item_id:
             errors.append('Item id should be a non-null and non-empty string.')
+        if not errors:
             found = self.__registry.delete(item_id)
         if found is not None:
             return found

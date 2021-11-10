@@ -15,10 +15,11 @@ class InventoryManagementServices:
         self.__current = []
         self.__undo = []
         self.__redo = []
+        self.__ordered = False
 
     def state_snapshot(self):
         self.__undo.append(self.__current)
-        self.__current = self.__delegate_crud_proxy.read_all()
+        self.__current = self.read_all()
         self.__redo.clear()
 
     def create_item(self, item_id, name, description, acq_price, location):
@@ -63,6 +64,7 @@ class InventoryManagementServices:
             else:
                 new_items.append(item)
         self.__delegate_crud_proxy.override_registry(new_items)
+        self.state_snapshot()
 
     def append_description_for_items_with_price_bigger_than(self, given_price, description):
         '''
@@ -83,13 +85,51 @@ class InventoryManagementServices:
         for item in items:
             if item.acq_price > price:
                 found = True
-                new_items.append(InventoryItem(item.item_id, item.name, item.description + description, item.acq_price, item.location))
+                new_items.append(InventoryItem(item.item_id, item.name, item.description + description, item.acq_price,
+                                               item.location))
             else:
                 new_items.append(item)
         if found:
             self.__delegate_crud_proxy.override_registry(new_items)
+            self.state_snapshot()
         else:
             raise ValueError(f"No item with price bigger than {price} has been found.")
+
+    def sort_by_acq_price_ascending(self):
+        '''
+        Sorts the inventory items in registry by price ascending order.
+        :return: nothing
+        '''
+        sorted_values = sorted(self.read_all(), key=lambda item: item.acq_price)
+        self.__delegate_crud_proxy.override_registry(sorted_values)
+        self.state_snapshot()
+
+    def __prices_by_location(self):
+        items = self.__current
+        prices_by_location = {}
+        for item in items:
+            prices_by_location.setdefault(item.location, []).append(item.acq_price)
+        return prices_by_location
+
+    def get_biggest_price_by_location(self):
+        '''
+        Finds the biggest price for each location.
+        :return: A dictionary with entries of kind <location> : <biggest price>
+        '''
+        result = self.__prices_by_location()
+        for location in result:
+            result[location] = max(result[location])
+        return result
+
+    def get_total_price_by_location(self):
+        '''
+        Computes total price by location.
+        :return: A dictionary with entries of kind <location> : <total_price>
+        '''
+        result = self.__prices_by_location()
+        for location in result:
+            result[location] = sum(result[location], float(0))
+        return result
 
     def undo(self):
         """
@@ -100,7 +140,7 @@ class InventoryManagementServices:
         if not self.__undo:
             raise ValueError("No previous state to go back.")
         self.__redo.append(self.__current)
-        self.__current = copy.deepcopy(self.__undo.pop())
+        self.__current = self.__undo.pop()
         self.__delegate_crud_proxy.override_registry(self.__current)
 
     def redo(self):
@@ -112,5 +152,5 @@ class InventoryManagementServices:
         if not self.__redo:
             raise ValueError("No previous undo to be reversed.")
         self.__undo.append(self.__current)
-        self.__current = copy.deepcopy(self.__redo.pop())
+        self.__current = self.__redo.pop()
         self.__delegate_crud_proxy.override_registry(self.__current)
